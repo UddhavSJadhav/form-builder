@@ -1,0 +1,13 @@
+{
+  "name": "form-builder",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"lerna run dev --scope=client\" \"lerna run dev --scope=server\""
+  },
+  "devDependencies": {
+    "lerna": "^7.4.2"
+  }
+}
