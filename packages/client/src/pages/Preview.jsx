@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
 import Categorize from "../components/client-questions/Categorize.jsx";
+import Cloze from "../components/client-questions/Cloze.jsx";
+import Comprehension from "../components/client-questions/Comprehension.jsx";
 
 import { axiosOpen } from "../utils/axios.js";
 
@@ -57,6 +59,10 @@ const Preview = () => {
             >
               {question?.type === "categorize" ? (
                 <Categorize index={index} data={question} />
+              ) : question?.type === "cloze" ? (
+                <Cloze index={index} data={question} />
+              ) : question?.type === "comprehension" ? (
+                <Comprehension index={index} data={question} />
               ) : (
                 <></>
               )}

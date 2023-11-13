@@ -7,6 +7,7 @@ import {
   getAllForms,
   getFormById,
   postForm,
+  deleteFormById,
 } from "../controllers/formController.js";
 
 const router = Router();
@@ -35,6 +36,6 @@ router
     postForm
   );
 
-router.route("/:formId").get(getFormById);
+router.route("/:formId").get(getFormById).delete(deleteFormById);
 
 export default router;

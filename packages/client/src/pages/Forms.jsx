@@ -1,6 +1,9 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { toast } from "react-toastify";
+
+import DeleteForm from "../components/toast/DeleteForm.jsx";
 
 import { axiosOpen } from "../utils/axios";
 
@@ -20,9 +23,29 @@ const Forms = () => {
     enabled: false,
   });
 
+  const { mutateAsync, isPending } = useMutation({
+    mutationFn: (formIdx) => axiosOpen.delete(`/forms/${formIdx}`),
+    onSuccess: () => refetch(),
+  });
+
   useEffect(() => {
     refetch();
   }, [refetch]);
+
+  const deleteForm = (formIdx) =>
+    toast(
+      <DeleteForm
+        deleteFn={() =>
+          toast.promise(async () => await mutateAsync(formIdx), {
+            pending: "Deleting Form",
+            success: "Form Deleted",
+            error: "Form Deletion Failed",
+          })
+        }
+        text="Delete Form?"
+        isPending={isPending}
+      />
+    );
 
   return (
     <section className="p-10 pt-7 max-w-screen-xl mx-auto">
@@ -103,7 +126,10 @@ const Forms = () => {
                       </button>
                     </Link>
 
-                    <button className="px-2 py-1 rounded-md bg-neutral-800 hover:bg-neutral-700 text-white">
+                    <button
+                      className="px-2 py-1 rounded-md bg-neutral-800 hover:bg-neutral-700 text-white"
+                      onClick={() => deleteForm(form._id)}
+                    >
                       Delete
                     </button>
                   </td>

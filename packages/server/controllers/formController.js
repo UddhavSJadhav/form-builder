@@ -65,13 +65,11 @@ export const postForm = async (req, res) => {
 
     req.body.headerImage = req.files?.headerImage?.shift()?.path || "";
 
-    const questionsImagesObj = req.files?.questionsImages?.reduce(
-      (prev, curr) => {
+    const questionsImagesObj =
+      req.files?.questionsImages?.reduce((prev, curr) => {
         const id = curr.filename.replace(`forms/${formId}-`, "");
         return { ...prev, [id]: curr.path };
-      },
-      {}
-    );
+      }, {}) || {};
 
     const newForm = await formModel.create({ ...req.body });
 
@@ -108,3 +106,14 @@ export const postForm = async (req, res) => {
 };
 
 // regex to get public id  from url "/upload\/(?:v\d+\/)?([^\.]+)/"
+
+export const deleteFormById = async (req, res) => {
+  try {
+    const { formId } = req.params;
+    await formModel.findByIdAndDelete(formId);
+    res.status(200).json({ message: "Form deletion successful!" });
+  } catch (error) {
+    console.error("error", error);
+    res.status(500).json({ message: "Something went wrong, Retry!" });
+  }
+};
