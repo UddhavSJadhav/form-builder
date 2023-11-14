@@ -1,3 +1,5 @@
+import path from "path";
+
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -25,8 +27,23 @@ app.use((req, res, next) => {
   next();
 });
 
-//paths
-app.get("/", (_, res) => res.json({ message: "Server is running!" }));
+//starter
+const environment = process.env.ENVIRONMENT;
+if (environment === "production") {
+  const __dirname = path.resolve();
+  const root = path.join(
+    __dirname.replace(/packages.*?$/, "packages"),
+    "client",
+    "dist"
+  );
+  console.log(root);
+  app.use(express.static(root));
+  app.get("/", (req, res) => {
+    res.sendFile("index.html", { root });
+  });
+} else {
+  app.get("/", (_, res) => res.json({ message: "Server is running!" }));
+}
 
 app.use("/api/v1/forms", formRouter);
 

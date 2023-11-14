@@ -14,7 +14,7 @@ const DeleteForm = ({ closeToast, deleteFn, text, isPending }) => (
         onClick={closeToast}
         className="bg-white text-black px-2 py-1 rounded-md"
       >
-        Close
+        Cancel
       </button>
     </div>
   </div>

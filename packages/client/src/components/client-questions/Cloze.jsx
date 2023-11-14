@@ -1,4 +1,5 @@
 /* eslint-disable react/prop-types */
+import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 
 const Cloze = ({ index, data }) => {
   return (
@@ -20,20 +21,39 @@ const Cloze = ({ index, data }) => {
         </div>
       )}
 
-      <div className="mt-3 font-bold">
-        {data?.sentence?.replace(/<u>.*?<\/u>/g, "___________________")}
-      </div>
+      <DragDropContext onDragEnd={() => {}}>
+        <Droppable droppableId={`cloze${1}`} direction="horizontal">
+          {(provided) => (
+            <div ref={provided.innerRef} {...provided.droppableProps}>
+              <div className="mt-3 font-bold">
+                {data?.sentence?.replace(/<u>.*?<\/u>/g, "___________________")}
+              </div>
 
-      <div className="mt-3 flex flex-wrap gap-1">
-        {data?.options?.map((opt) => (
-          <div
-            key={opt}
-            className="bg-neutral-400 text-white px-4 py-2 rounded-md"
-          >
-            {opt}
-          </div>
-        ))}
-      </div>
+              <div className="mt-3 flex flex-wrap gap-1">
+                {data?.options?.map((opt, index) => (
+                  <Draggable
+                    key={index}
+                    index={index}
+                    draggableId={`draggable-${index}`}
+                  >
+                    {(provided) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                      >
+                        <div className="bg-neutral-400 text-white px-4 py-2 rounded-md">
+                          {opt}
+                        </div>
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+              </div>
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
     </div>
   );
 };

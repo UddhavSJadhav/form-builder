@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
+import { useNavigate, useParams } from "react-router-dom";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 
 import Categorize from "../components/admin-questions/Categorize.jsx";
@@ -19,6 +19,7 @@ import { axiosOpen } from "../utils/axios.js";
 import { isValidBool } from "../utils/support.js";
 
 const EditForm = () => {
+  const { formId } = useParams();
   const navigate = useNavigate();
 
   const [data, setData] = useState({
@@ -27,6 +28,26 @@ const EditForm = () => {
     imgFile: "",
   });
   const [questions, setQuestions] = useState([]);
+
+  const [query, setQuery] = useState(true);
+  const { isLoading } = useQuery({
+    queryKey: ["form", formId],
+    queryFn: async () => {
+      const { data } = await axiosOpen.get(`/forms/${formId}`);
+      setQuery(false);
+
+      setData((prev) => ({
+        ...prev,
+        formName: data?.data?.formName,
+        imgUrl: data?.data?.headerImage,
+      }));
+
+      setQuestions([...(data?.data?.questions || [])]);
+
+      return data?.data;
+    },
+    enabled: query,
+  });
 
   const { mutate, isPending, error } = useMutation({
     mutationFn: () => {
@@ -216,10 +237,17 @@ const EditForm = () => {
     }
   };
 
+  if (isLoading)
+    return (
+      <div className="grid place-content-center h-[calc(100vh-80px)]">
+        <div className="font-extrabold text-xl">Loading...</div>
+      </div>
+    );
+
   return (
     <section className="p-10 pt-7 max-w-screen-xl mx-auto">
       <div className="flex justify-between items-end border-b border-solid border-b-neutral-300 p-1">
-        <h2 className="font-extrabold text-2xl">Add New Form</h2>
+        <h2 className="font-extrabold text-2xl">Edit Form</h2>
 
         <div>
           <div className="inline-block">
@@ -234,7 +262,7 @@ const EditForm = () => {
                   Processing...
                 </>
               ) : (
-                "Save"
+                "Update"
               )}
             </button>
           </div>

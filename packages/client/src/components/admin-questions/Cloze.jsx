@@ -104,7 +104,7 @@ const Cloze = ({ idx, questionInfo, setQuestions, errors }) => {
       const [reorderedItem] = reorderedOptions.splice(result.source.index, 1);
       reorderedOptions.splice(result.destination.index, 0, reorderedItem);
 
-      clone[idx].categories = reorderedOptions;
+      clone[idx].options = reorderedOptions;
       return clone;
     });
   };

@@ -42,6 +42,7 @@ const Comprehension = ({ index, data }) => {
                     id={`option${index}-${mcqIndex}-${optIndex}`}
                     name={`options${index}-${mcqIndex}`}
                     className="me-1"
+                    defaultChecked={optIndex === 0}
                   />
                   <label htmlFor={`option${index}-${mcqIndex}-${optIndex}`}>
                     {opt}
