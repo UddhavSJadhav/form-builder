@@ -23,8 +23,8 @@ const AddNewForm = () => {
 
   const [data, setData] = useState({
     formName: "",
-    imgUrl: "",
-    imgFile: "",
+    headerImageURL: "",
+    headerImageFile: "",
   });
   const [questions, setQuestions] = useState([]);
 
@@ -67,6 +67,8 @@ const AddNewForm = () => {
           filteredQuestion.itemsWithBelongsTo = que.itemsWithBelongsTo.filter(
             (a) => a?.item?.trim() && a?.belongsTo?.trim()
           );
+
+          filteredQuestion.description = que?.description || "";
         } else if (que.type === "cloze") {
           queErrors.sentence = !isValidBool(
             que.sentence?.replace("<p>", "").replace("</p>", "")
@@ -90,6 +92,7 @@ const AddNewForm = () => {
             options: [
               mcq.options.filter((c) => c.trim()).length ? false : true,
             ],
+            answer: Number(mcq.answer),
           }));
 
           filteredQuestion.passage = que?.passage?.trim();
@@ -112,21 +115,25 @@ const AddNewForm = () => {
 
       const formData = new FormData();
 
-      const formId = crypto.randomUUID();
-      formData.append("formId", formId);
+      const tempFormId = crypto.randomUUID();
+      formData.append("formId", tempFormId);
       formData.append("formName", data.formName);
-      if (data.imgFile)
-        formData.append("headerImage", data.imgFile, `${formId}-headerImage`);
+      if (data.headerImageFile)
+        formData.append(
+          "headerImage",
+          data.headerImageFile,
+          `${tempFormId}-headerImage`
+        );
 
       formData.append("questions", JSON.stringify([...filteredQuestions]));
 
       questions.forEach((question, index) => {
-        if (question.imgFile) {
-          const ext = question.imgFile.name.split(".").pop();
+        if (question.imageFile) {
+          const ext = question.imageFile.name.split(".").pop();
           formData.append(
             "questionsImages",
-            question.imgFile,
-            `${formId}-${index}.${ext}`
+            question.imageFile,
+            `${tempFormId}-${index}.${ext}`
           );
         }
       });
@@ -148,7 +155,12 @@ const AddNewForm = () => {
   });
 
   const addQuestion = (type) => {
-    let obj = { type, points: undefined, imgUrl: "", imgFile: "" };
+    let obj = {
+      type,
+      points: undefined,
+      imageUrl: "",
+      imageFile: "",
+    };
     if (type === "categorize") {
       obj = {
         ...obj,
@@ -187,7 +199,7 @@ const AddNewForm = () => {
   };
 
   const removeHeaderImage = () => {
-    setData((prev) => ({ ...prev, imgFile: "", imgUrl: "" }));
+    setData((prev) => ({ ...prev, headerImageFile: "", headerImageURL: "" }));
   };
 
   const handleChangeForm = (e) => {
@@ -203,14 +215,14 @@ const AddNewForm = () => {
     ) {
       setData((prev) => ({
         ...prev,
-        imgUrl: URL.createObjectURL(e.target.files[0]),
-        imgFile: e.target.files[0],
+        headerImageURL: URL.createObjectURL(e.target.files[0]),
+        headerImageFile: e.target.files[0],
       }));
     } else {
       setData((prev) => ({
         ...prev,
-        imgUrl: "",
-        imgFile: "",
+        headerImageURL: "",
+        headerImageFile: "",
       }));
       e.target.value = null;
     }
@@ -269,10 +281,10 @@ const AddNewForm = () => {
           className="opacity-0 w-full h-56 absolute top-0 left-0 z-10 cursor-pointer"
           onChange={handleChangeForm}
         />
-        {data.imgUrl ? (
+        {data.headerImageURL ? (
           <>
             <img
-              src={data.imgUrl}
+              src={data.headerImageURL}
               alt="headerImage"
               className="w-full h-full rounded-md object-contain"
             />

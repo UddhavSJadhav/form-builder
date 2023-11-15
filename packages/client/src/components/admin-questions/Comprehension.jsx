@@ -28,8 +28,8 @@ const Comprehension = ({ idx, questionInfo, setQuestions, errors }) => {
         let clone = prev;
         clone[idx] = {
           ...clone[idx],
-          imgUrl: URL.createObjectURL(event.target.files[0]),
-          imgFile: event.target.files[0],
+          imageUrl: URL.createObjectURL(event.target.files[0]),
+          imageFile: event.target.files[0],
         };
         return [...clone];
       });
@@ -38,8 +38,8 @@ const Comprehension = ({ idx, questionInfo, setQuestions, errors }) => {
         let clone = prev;
         clone[idx] = {
           ...clone[idx],
-          imgUrl: "",
-          imgFile: "",
+          imageUrl: "",
+          imageFile: "",
         };
         return [...clone];
       });
@@ -50,8 +50,8 @@ const Comprehension = ({ idx, questionInfo, setQuestions, errors }) => {
   const removeImage = () => {
     setQuestions((prev) => {
       const clone = [...prev];
-      clone[idx].imgFile = "";
-      clone[idx].imgUrl = "";
+      clone[idx].imageFile = "";
+      clone[idx].imageUrl = "";
       return clone;
     });
   };
@@ -151,6 +151,7 @@ const Comprehension = ({ idx, questionInfo, setQuestions, errors }) => {
       let optsArr = mcqsArr[mcqIdx].options;
       if (optsArr.length === 1) return prev;
       mcqsArr[mcqIdx].options = optsArr.filter((_, i) => i !== optionIdx);
+      if (mcqsArr[mcqIdx].answer === optionIdx + 1) mcqsArr[mcqIdx].answer = 1;
       clone[idx].mcqs = mcqsArr;
       return [...clone];
     });
@@ -197,10 +198,10 @@ const Comprehension = ({ idx, questionInfo, setQuestions, errors }) => {
           </div>
         </div>
       </div>
-      {questionInfo.imgUrl && (
+      {questionInfo.imageUrl && (
         <div className="mt-2 h-28 relative max-w-max">
           <img
-            src={questionInfo.imgUrl}
+            src={questionInfo.imageUrl}
             alt="categoryImage"
             className="h-full max-w-full object-contain"
           />

@@ -7,6 +7,8 @@ import {
   comprehensionModel,
 } from "../models/index.js";
 
+import { getPublicIdFromUrl } from "../utils/cloudinary.js";
+
 export const getAllForms = async (req, res) => {
   try {
     const PAGE_SIZE = parseInt(req.query?.page_size || "10");
@@ -27,7 +29,7 @@ export const getAllForms = async (req, res) => {
     res.status(200).json({
       data: forms,
       total_data: total,
-      total_pages: Math.ceil(total / PAGE_SIZE),
+      total_pages: Math.ceil(total / PAGE_SIZE) || 1,
     });
   } catch (error) {
     console.error("error", error);
@@ -105,12 +107,143 @@ export const postForm = async (req, res) => {
   }
 };
 
-// regex to get public id  from url "/upload\/(?:v\d+\/)?([^\.]+)/"
+export const editFormById = async (req, res) => {
+  try {
+    const { formId } = req.params;
+
+    let formData = {
+      formName: req.body.formName,
+    };
+
+    if (req.files?.headerImage?.shift()?.path)
+      formData.headerImage = req.files?.headerImage?.shift()?.path;
+
+    const questionsImagesObj =
+      req.files?.questionsImages?.reduce((prev, curr) => {
+        const id = curr.filename.replace(`forms/${formId}-`, "");
+        return { ...prev, [id]: curr.path };
+      }, {}) || {};
+
+    const updatedForm = await formModel.findByIdAndUpdate(formId, formData);
+    if (formData?.headerImage && updatedForm.headerImage)
+      await cloudinary.uploader.destroy(
+        getPublicIdFromUrl(updatedForm.headerImage)
+      );
+
+    if (req.body.deletedQuestions) {
+      const deletedQuestions = JSON.parse(req.body.deletedQuestions);
+
+      await Promise.all([
+        ...deletedQuestions.map(async (question) => {
+          const deletedQuestion =
+            question.type === "categorize"
+              ? await categorizeModel.findByIdAndDelete(question._id)
+              : question.type === "cloze"
+              ? await clozeModel.findByIdAndDelete(question._id)
+              : question.type === "comprehension"
+              ? await comprehensionModel.findByIdAndDelete(question._id)
+              : null;
+
+          if (deletedQuestion?.imageUrl)
+            await cloudinary.uploader.destroy(
+              getPublicIdFromUrl(deletedQuestions.imageUrl)
+            );
+
+          return;
+        }),
+      ]);
+    }
+
+    if (req.body.questions) {
+      const questions = JSON.parse(req.body.questions);
+      await Promise.all([
+        ...questions.map(async (question, index) => {
+          const questionId = question?._id;
+          let questionObj = {
+            ...question,
+            form: formId,
+          };
+          const imageUrl = questionsImagesObj[index.toString()] || "";
+          if (imageUrl) questionObj.imageUrl = imageUrl;
+
+          if (questionId) {
+            const updatedQuestion =
+              question.type === "categorize"
+                ? await categorizeModel.findByIdAndUpdate(
+                    questionId,
+                    questionObj
+                  )
+                : question.type === "cloze"
+                ? await clozeModel.findByIdAndUpdate(questionId, questionObj)
+                : question.type === "comprehension"
+                ? await comprehensionModel.findByIdAndUpdate(
+                    questionId,
+                    questionObj
+                  )
+                : null;
+
+            if (
+              (imageUrl && updatedQuestion?.imageUrl) ||
+              (!question.imageUrl && updatedQuestion.imageUrl)
+            )
+              await cloudinary.uploader.destroy(
+                getPublicIdFromUrl(updatedQuestion.imageUrl)
+              );
+            return;
+          } else {
+            return question.type === "categorize"
+              ? await categorizeModel.create(questionObj)
+              : question.type === "cloze"
+              ? await clozeModel.create(questionObj)
+              : question.type === "comprehension"
+              ? await comprehensionModel.create(questionObj)
+              : null;
+          }
+        }),
+      ]);
+    }
+
+    res.status(200).json({ message: "Form updation successful!" });
+  } catch (error) {
+    console.error("error", error);
+    if (req.files.headerImage)
+      await cloudinary.uploader.destroy(req.files.headerImage[0].path);
+    if (req.files.questionsImages)
+      req.files.questionsImages.map(
+        async (img) => await cloudinary.uploader.destroy(img.path)
+      );
+    res.status(500).json({ message: "Something went wrong, Retry!" });
+  }
+};
 
 export const deleteFormById = async (req, res) => {
   try {
     const { formId } = req.params;
-    await formModel.findByIdAndDelete(formId);
+
+    const deletedForm = await formModel.findByIdAndDelete(formId);
+    if (deletedForm.headerImage)
+      await cloudinary.uploader.destroy(
+        getPublicIdFromUrl(deletedForm.headerImage)
+      );
+
+    const [categorizeQues, clozeQues, comprehensionQues] = await Promise.all([
+      categorizeModel.find({ form: formId }),
+      clozeModel.find({ form: formId }),
+      comprehensionModel.find({ form: formId }),
+    ]);
+
+    const questions = [...categorizeQues, ...clozeQues, ...comprehensionQues];
+    await Promise.all([
+      ...questions.map(async (question) => {
+        if (question.imageUrl)
+          await cloudinary.uploader.destroy(
+            getPublicIdFromUrl(question.imageUrl)
+          );
+
+        return await question.deleteOne();
+      }),
+    ]);
+
     res.status(200).json({ message: "Form deletion successful!" });
   } catch (error) {
     console.error("error", error);

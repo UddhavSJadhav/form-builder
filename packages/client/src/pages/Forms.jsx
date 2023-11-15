@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 
@@ -8,6 +8,8 @@ import DeleteForm from "../components/toast/DeleteForm.jsx";
 import { axiosOpen } from "../utils/axios";
 
 const Forms = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["forms"],
     queryFn: async () => {
@@ -17,6 +19,12 @@ const Forms = () => {
       };
 
       const { data } = await axiosOpen.get("/forms", { params });
+
+      setSearchParams({
+        page_no: params.page_no,
+        page_size: params.page_size,
+        total_data: data?.total_data,
+      });
 
       return data.data;
     },
@@ -30,7 +38,7 @@ const Forms = () => {
 
   useEffect(() => {
     refetch();
-  }, [refetch]);
+  }, [refetch, searchParams]);
 
   const deleteForm = (formIdx) =>
     toast(
@@ -147,6 +155,59 @@ const Forms = () => {
             )}
           </tbody>
         </table>
+      </div>
+      <div className="mt-4 flex flex-wrap justify-between items-center">
+        <div>
+          {`Showing ${
+            1 +
+            (Number(searchParams.get("page_no")) - 1) *
+              Number(searchParams.get("page_size"))
+          } to ${
+            Number(
+              searchParams.get("total_data") <
+                Number(searchParams.get("page_size"))
+            )
+              ? searchParams.get("total_data")
+              : Number(searchParams.get("page_no")) *
+                Number(searchParams.get("page_size"))
+          } of ${searchParams.get("total_data")?.toString()}`}
+        </div>
+
+        <div className="flex">
+          <button
+            className="py-1 px-2 bg-neutral-300 disabled:opacity-80 rounded-s-md border-e border-solid border-neutral-400"
+            disabled={searchParams.get("page_no") === "1"}
+          >
+            Previous
+          </button>
+          {searchParams.get("page_no") !== "1" && (
+            <button className="py-1 px-2 bg-neutral-300 border-e border-solid border-neutral-400">
+              {Number(searchParams.get("page_no")) - 1}
+            </button>
+          )}
+          <div className="py-1 px-2 bg-neutral-300 border-e border-solid border-neutral-400">
+            {searchParams.get("page_no")}
+          </div>
+          {Math.ceil(
+            Number(searchParams.get("total_data")) /
+              Number(searchParams.get("page_size"))
+          ) !== Number(searchParams.get("page_no")) && (
+            <button className="py-1 px-2 bg-neutral-300 border-e border-solid border-neutral-400">
+              {Number(searchParams.get("page_no")) + 1}
+            </button>
+          )}
+          <button
+            className="py-1 px-2 bg-neutral-300 disabled:opacity-80 rounded-e-md"
+            disabled={
+              Math.ceil(
+                Number(searchParams.get("total_data")) /
+                  Number(searchParams.get("page_size"))
+              ) === Number(searchParams.get("page_no"))
+            }
+          >
+            Next
+          </button>
+        </div>
       </div>
     </section>
   );

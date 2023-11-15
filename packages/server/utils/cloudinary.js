@@ -7,3 +7,6 @@ export const connectCloudinary = () =>
     api_secret: process.env.CLOUD_API_SECRET,
     secure: true,
   });
+
+export const getPublicIdFromUrl = (url) =>
+  url?.match(/upload\/(?:v\d+\/)?([^\.]+)/)[1];

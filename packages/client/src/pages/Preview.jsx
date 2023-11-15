@@ -41,13 +41,16 @@ const Preview = () => {
         <div className="font-bold text-3xl text-center underline">
           {data?.formName}
         </div>
-        <div className="h-56 mt-2">
-          <img
-            src={data?.headerImage}
-            alt="headerImage"
-            className="w-full h-full rounded-md object-contain"
-          />
-        </div>
+
+        {data?.headerImage && (
+          <div className="h-56 mt-2">
+            <img
+              src={data?.headerImage}
+              alt="headerImage"
+              className="w-full h-full rounded-md object-contain"
+            />
+          </div>
+        )}
 
         <hr className="mt-2 border-neutral-300" />
 

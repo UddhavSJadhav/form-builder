@@ -7,6 +7,7 @@ import {
   getAllForms,
   getFormById,
   postForm,
+  editFormById,
   deleteFormById,
 } from "../controllers/formController.js";
 
@@ -36,6 +37,16 @@ router
     postForm
   );
 
-router.route("/:formId").get(getFormById).delete(deleteFormById);
+router
+  .route("/:formId")
+  .get(getFormById)
+  .patch(
+    upload.fields([
+      { name: "headerImage", maxCount: 1 },
+      { name: "questionsImages" },
+    ]),
+    editFormById
+  )
+  .delete(deleteFormById);
 
 export default router;

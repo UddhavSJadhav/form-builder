@@ -24,10 +24,11 @@ const EditForm = () => {
 
   const [data, setData] = useState({
     formName: "",
-    imgUrl: "",
-    imgFile: "",
+    headerImageURL: "",
+    headerImageFile: "",
   });
   const [questions, setQuestions] = useState([]);
+  const [deletedQuestions, setDeletedQuestions] = useState([]);
 
   const [query, setQuery] = useState(true);
   const { isLoading } = useQuery({
@@ -39,7 +40,7 @@ const EditForm = () => {
       setData((prev) => ({
         ...prev,
         formName: data?.data?.formName,
-        imgUrl: data?.data?.headerImage,
+        headerImageURL: data?.data?.headerImage,
       }));
 
       setQuestions([...(data?.data?.questions || [])]);
@@ -66,7 +67,12 @@ const EditForm = () => {
         let queErrors = {
           points: !isValidBool(que.points),
         };
-        let filteredQuestion = { type: que.type, points: que.points };
+        let filteredQuestion = {
+          type: que.type,
+          points: que.points,
+          imageUrl: que?.imageUrl || "",
+        };
+        if (que?._id) filteredQuestion._id = que._id;
 
         if (que.type === "categorize") {
           queErrors.categories = [
@@ -88,6 +94,8 @@ const EditForm = () => {
           filteredQuestion.itemsWithBelongsTo = que.itemsWithBelongsTo.filter(
             (a) => a?.item?.trim() && a?.belongsTo?.trim()
           );
+
+          filteredQuestion.description = que?.description || "";
         } else if (que.type === "cloze") {
           queErrors.sentence = !isValidBool(
             que.sentence?.replace("<p>", "").replace("</p>", "")
@@ -133,31 +141,37 @@ const EditForm = () => {
 
       const formData = new FormData();
 
-      const formId = crypto.randomUUID();
-      formData.append("formId", formId);
       formData.append("formName", data.formName);
-      if (data.imgFile)
-        formData.append("headerImage", data.imgFile, `${formId}-headerImage`);
+      if (data.headerImageFile)
+        formData.append(
+          "headerImage",
+          data.headerImageFile,
+          `${formId}-headerImage`
+        );
 
       formData.append("questions", JSON.stringify([...filteredQuestions]));
+      formData.append(
+        "deletedQuestions",
+        JSON.stringify([...deletedQuestions])
+      );
 
       questions.forEach((question, index) => {
-        if (question.imgFile) {
-          const ext = question.imgFile.name.split(".").pop();
+        if (question.imageFile) {
+          const ext = question.imageFile.name.split(".").pop();
           formData.append(
             "questionsImages",
-            question.imgFile,
+            question.imageFile,
             `${formId}-${index}.${ext}`
           );
         }
       });
 
-      return axiosOpen.post("/forms", formData, {
+      return axiosOpen.patch(`/forms/${formId}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
     },
     onSuccess: () => {
-      toast.success("Form creation successful!");
+      toast.success("Form updatation successful!");
       navigate("/forms", { replace: true });
     },
     onError: (err) => {
@@ -169,7 +183,7 @@ const EditForm = () => {
   });
 
   const addQuestion = (type) => {
-    let obj = { type, points: undefined, imgUrl: "", imgFile: "" };
+    let obj = { type, points: undefined, imageURL: "", imageFile: "" };
     if (type === "categorize") {
       obj = {
         ...obj,
@@ -196,19 +210,35 @@ const EditForm = () => {
   };
 
   const copyQuestion = (idx) => {
-    setQuestions((prev) => [
-      ...prev.slice(0, idx + 1),
-      { ...prev[idx] },
-      ...prev.slice(idx + 1),
-    ]);
+    setQuestions((prev) => {
+      let queToCopy = { ...prev[idx] };
+      if (queToCopy?._id) delete queToCopy._id;
+      return [
+        ...prev.slice(0, idx + 1),
+        { ...queToCopy },
+        ...prev.slice(idx + 1),
+      ];
+    });
   };
 
   const removeQuestion = (idx) => {
-    setQuestions((prev) => [...prev.filter((_, i) => i !== idx)]);
+    setQuestions((prev) => [
+      ...prev.filter((que, i) => {
+        if (i === idx) {
+          if (que?._id)
+            setDeletedQuestions((prev) => [
+              ...prev,
+              { _id: que._id, type: que.type },
+            ]);
+          return false;
+        }
+        return true;
+      }),
+    ]);
   };
 
   const removeHeaderImage = () => {
-    setData((prev) => ({ ...prev, imgFile: "", imgUrl: "" }));
+    setData((prev) => ({ ...prev, headerImageFile: "", headerImageURL: "" }));
   };
 
   const handleChangeForm = (e) => {
@@ -224,14 +254,14 @@ const EditForm = () => {
     ) {
       setData((prev) => ({
         ...prev,
-        imgUrl: URL.createObjectURL(e.target.files[0]),
-        imgFile: e.target.files[0],
+        headerImageURL: URL.createObjectURL(e.target.files[0]),
+        headerImageFile: e.target.files[0],
       }));
     } else {
       setData((prev) => ({
         ...prev,
-        imgUrl: "",
-        imgFile: "",
+        headerImageURL: "",
+        headerImageFile: "",
       }));
       e.target.value = null;
     }
@@ -297,10 +327,10 @@ const EditForm = () => {
           className="opacity-0 w-full h-56 absolute top-0 left-0 z-10 cursor-pointer"
           onChange={handleChangeForm}
         />
-        {data.imgUrl ? (
+        {data.headerImageURL ? (
           <>
             <img
-              src={data.imgUrl}
+              src={data.headerImageURL}
               alt="headerImage"
               className="w-full h-full rounded-md object-contain"
             />
