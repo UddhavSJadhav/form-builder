@@ -12,12 +12,35 @@ const Preview = () => {
   const { formId } = useParams();
   const navigate = useNavigate();
 
+  const [answers, setAnswers] = useState([]);
+
   const [query, setQuery] = useState(true);
   const { data } = useQuery({
     queryKey: ["form", formId],
     queryFn: async () => {
       const { data } = await axiosOpen.get(`/forms/${formId}`);
       setQuery(false);
+
+      setAnswers([
+        ...(data?.data?.questions?.map((que) => {
+          let queObj = { _id: que._id, type: que.type };
+
+          if (que.type === "categorize") {
+            let answer = {};
+            que.categories.forEach((category) => {
+              answer[category] = [];
+            });
+            queObj.answer = answer;
+          } else if (que.type === "cloze") {
+            queObj.answer = [];
+          } else if (que.type === "comprehension") {
+            queObj.answer = que?.mcqs?.map(() => 1);
+          }
+
+          return queObj;
+        }) || []),
+      ]);
+
       return data?.data;
     },
     enabled: query,
@@ -61,11 +84,26 @@ const Preview = () => {
               className="max-w-4xl mx-auto bg-white rounded-xl mt-2 p-3 shadow-md"
             >
               {question?.type === "categorize" ? (
-                <Categorize index={index} data={question} />
+                <Categorize
+                  index={index}
+                  data={question}
+                  answer={answers[index]}
+                  setAnswers={setAnswers}
+                />
               ) : question?.type === "cloze" ? (
-                <Cloze index={index} data={question} />
+                <Cloze
+                  index={index}
+                  data={question}
+                  answer={answers[index]}
+                  setAnswers={setAnswers}
+                />
               ) : question?.type === "comprehension" ? (
-                <Comprehension index={index} data={question} />
+                <Comprehension
+                  index={index}
+                  data={question}
+                  answer={answers[index]}
+                  setAnswers={setAnswers}
+                />
               ) : (
                 <></>
               )}

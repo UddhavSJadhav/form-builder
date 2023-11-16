@@ -1,6 +1,16 @@
 /* eslint-disable react/prop-types */
 
-const Comprehension = ({ index, data }) => {
+const Comprehension = ({ index, data, answer, setAnswers }) => {
+  const setMCQAnswer = (mcqindex, optIndex) => {
+    setAnswers((prev) => {
+      let clone = [...prev];
+      let mcqAnswers = clone[index].answer;
+      mcqAnswers[mcqindex] = optIndex + 1;
+      clone[index].answer = mcqAnswers;
+      return clone;
+    });
+  };
+
   return (
     <div>
       <div className="flex justify-between">
@@ -42,7 +52,8 @@ const Comprehension = ({ index, data }) => {
                     id={`option${index}-${mcqIndex}-${optIndex}`}
                     name={`options${index}-${mcqIndex}`}
                     className="me-1"
-                    defaultChecked={optIndex === 0}
+                    checked={answer?.answer[mcqIndex] === optIndex + 1}
+                    onChange={() => setMCQAnswer(mcqIndex, optIndex)}
                   />
                   <label htmlFor={`option${index}-${mcqIndex}-${optIndex}`}>
                     {opt}
