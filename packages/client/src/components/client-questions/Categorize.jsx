@@ -21,6 +21,8 @@ const Categorize = ({ index, data }) => {
         </div>
       )}
 
+      <p className="text-center py-1">{data?.description}</p>
+
       <DragDropContext onDragEnd={() => {}}>
         <Droppable droppableId={`categoryDrop${1}`} direction="horizontal">
           {(provided) => (

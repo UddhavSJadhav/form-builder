@@ -92,7 +92,6 @@ const AddNewForm = () => {
             options: [
               mcq.options.filter((c) => c.trim()).length ? false : true,
             ],
-            answer: Number(mcq.answer),
           }));
 
           filteredQuestion.passage = que?.passage?.trim();
@@ -100,6 +99,7 @@ const AddNewForm = () => {
           filteredQuestion.mcqs = que?.mcqs?.map((mcq) => ({
             question: mcq?.question?.trim(),
             options: mcq?.options?.filter((c) => c?.trim()),
+            answer: Number(mcq?.answer),
           }));
         }
 

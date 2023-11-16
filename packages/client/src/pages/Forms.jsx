@@ -122,6 +122,19 @@ const Forms = () => {
                     </Link>
                   </td>
                   <td className="font-bold py-4 px-4 border border-slate-300 text-left">
+                    <button
+                      className="px-2 py-1 rounded-md bg-neutral-800 hover:bg-neutral-700 text-white me-1"
+                      title="copy url"
+                      onClick={() => {
+                        navigator.clipboard.writeText(
+                          `${location.host}/form/${form._id}`
+                        );
+                        toast.success("URL copied!");
+                      }}
+                    >
+                      URL
+                    </button>
+
                     <Link to={`/forms/preview/${form._id}`} className="me-1">
                       <button className="px-2 py-1 rounded-md bg-neutral-800 hover:bg-neutral-700 text-white">
                         Preview

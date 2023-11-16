@@ -126,6 +126,7 @@ const EditForm = () => {
           filteredQuestion.mcqs = que?.mcqs?.map((mcq) => ({
             question: mcq?.question?.trim(),
             options: mcq?.options?.filter((c) => c?.trim()),
+            answer: Number(mcq?.answer),
           }));
         }
 

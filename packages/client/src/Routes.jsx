@@ -13,6 +13,7 @@ import AddNewForm from "./pages/AddNewForm";
 const Responses = lazy(() => import("./pages/Responses"));
 const Preview = lazy(() => import("./pages/Preview.jsx"));
 const EditForm = lazy(() => import("./pages/EditForm.jsx"));
+const Form = lazy(() => import("./pages/Form.jsx"));
 
 const Router = () => {
   //   const { auth } = useAuth();
@@ -36,6 +37,7 @@ const Router = () => {
         <Route path="/forms/preview/:formId" element={<Preview />} />
         {/* </Route> */}
       </Route>
+      <Route path="/form/:formId" element={<Form />} />
     </Routes>
   );
 };
