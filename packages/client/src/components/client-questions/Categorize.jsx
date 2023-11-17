@@ -93,6 +93,7 @@ const Categorize = ({ index, data, answer, setAnswers }) => {
                         </div>
                       </div>
                     ))}
+                    {provided.placeholder}
                   </div>
                 )}
               </Droppable>

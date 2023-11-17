@@ -20,11 +20,14 @@ const Forms = () => {
 
       const { data } = await axiosOpen.get("/forms", { params });
 
-      setSearchParams({
-        page_no: params.page_no,
-        page_size: params.page_size,
-        total_data: data?.total_data,
-      });
+      setSearchParams(
+        {
+          page_no: params.page_no,
+          page_size: params.page_size,
+          total_data: data?.total_data,
+        },
+        { replace: true }
+      );
 
       return data.data;
     },
@@ -188,29 +191,32 @@ const Forms = () => {
 
         <div className="flex">
           <button
-            className="py-1 px-2 bg-neutral-300 disabled:opacity-80 rounded-s-md border-e border-solid border-neutral-400"
+            className="py-1 px-2 bg-neutral-900 hover:bg-neutral-700 disabled:bg-neutral-700 disabled:cursor-not-allowed text-white rounded-s-md border-e border-solid border-neutral-400"
             disabled={searchParams.get("page_no") === "1"}
           >
             Previous
           </button>
           {searchParams.get("page_no") !== "1" && (
-            <button className="py-1 px-2 bg-neutral-300 border-e border-solid border-neutral-400">
+            <button className="py-1 px-2 bg-neutral-900 hover:bg-neutral-700 disabled:bg-neutral-700 text-white border-e border-solid border-neutral-400">
               {Number(searchParams.get("page_no")) - 1}
             </button>
           )}
-          <div className="py-1 px-2 bg-neutral-300 border-e border-solid border-neutral-400">
+          <button
+            title="current page"
+            className="py-1 px-2 bg-neutral-900 text-white border-e border-solid border-neutral-400 cursor-none"
+          >
             {searchParams.get("page_no")}
-          </div>
+          </button>
           {Math.ceil(
             Number(searchParams.get("total_data")) /
               Number(searchParams.get("page_size"))
           ) !== Number(searchParams.get("page_no")) && (
-            <button className="py-1 px-2 bg-neutral-300 border-e border-solid border-neutral-400">
+            <button className="py-1 px-2 bg-neutral-900 hover:bg-neutral-700 disabled:bg-neutral-700 text-white border-e border-solid border-neutral-400">
               {Number(searchParams.get("page_no")) + 1}
             </button>
           )}
           <button
-            className="py-1 px-2 bg-neutral-300 disabled:opacity-80 rounded-e-md"
+            className="py-1 px-2 bg-neutral-900 hover:bg-neutral-700 disabled:bg-neutral-700 disabled:cursor-not-allowed text-white rounded-e-md"
             disabled={
               Math.ceil(
                 Number(searchParams.get("total_data")) /

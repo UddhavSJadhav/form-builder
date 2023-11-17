@@ -1,15 +1,26 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 
 import Categorize from "../components/client-questions/Categorize.jsx";
 import Cloze from "../components/client-questions/Cloze.jsx";
 import Comprehension from "../components/client-questions/Comprehension.jsx";
 
+import Input from "../components/custom/Input.jsx";
+
 import { axiosOpen } from "../utils/axios.js";
+import { isValidBool, isValid } from "../utils/support.js";
 
 const Form = () => {
   const { formId } = useParams();
+
+  const [detailsForm, setDetailsForm] = useState(true);
+  const [details, setDetails] = useState({
+    name: "",
+    email: "",
+  });
+  const [errors, setErrors] = useState({ name: false, email: false });
 
   const [answers, setAnswers] = useState([]);
 
@@ -44,6 +55,30 @@ const Form = () => {
     },
     enabled: query,
   });
+
+  const onDetailFormChange = (e) => {
+    setDetails((prev) => ({ ...prev, [e.target.id]: e.target.value }));
+  };
+
+  const handleDetailFormSubmit = () =>
+    setErrors((prev) => {
+      prev.email = !isValidBool(details.email);
+      prev.name = !isValidBool(details.name);
+
+      if (Object.values(prev).reduce((prev, curr) => prev || curr, false)) {
+        toast.error("Both fields are required!");
+        return { ...prev };
+      }
+
+      if (isValid("Email", details.email, "email") !== "") {
+        toast.error("Email is invalid!");
+        prev.email = true;
+        return { ...prev };
+      }
+
+      setDetailsForm(false);
+      return prev;
+    });
 
   return (
     <div className="bg-neutral-100 min-h-screen">
@@ -102,6 +137,49 @@ const Form = () => {
           <div className="mt-3 max-w-4xl mx-auto">
             <button className="bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-800 text-white w-full px-2 py-2 font-extrabold rounded-xl shadow-md">
               Submit
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/*User Details Form*/}
+      <div
+        className={`w-screen min-h-screen bg-white bg-opacity-50 backdrop-blur-sm ${
+          detailsForm ? "fixed" : "hidden"
+        } top-0 grid place-content-center`}
+      >
+        <div className="bg-neutral-200 m-2 p-4 rounded-lg w-[min(90vw,400px)]">
+          <div className="text-center font-bold text-2xl">
+            Fill To Continue...
+          </div>
+
+          <div className="mt-3">
+            <Input
+              id="name"
+              placeholder="Name"
+              size="lg"
+              value={details?.name}
+              onChange={onDetailFormChange}
+              isInvalid={errors?.name}
+            />
+          </div>
+          <div className="mt-3">
+            <Input
+              id="email"
+              placeholder="Email"
+              size="lg"
+              value={details?.email}
+              onChange={onDetailFormChange}
+              isInvalid={errors?.email}
+            />
+          </div>
+
+          <div className="text-center mt-3">
+            <button
+              className="bg-neutral-900 hover:bg-neutral-700 px-4 py-2 text-white font-bold rounded-lg"
+              onClick={handleDetailFormSubmit}
+            >
+              Continue
             </button>
           </div>
         </div>

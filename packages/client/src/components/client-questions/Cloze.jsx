@@ -11,6 +11,7 @@ const Cloze = ({ index, data, answer, setAnswers }) => {
 
   function setOption(result) {
     if (!result.destination) return;
+    if (!/answer/.test(result.destination.droppableId)) return;
     const answerId = Number(
       result.destination.droppableId.replace("answer", "")
     );
