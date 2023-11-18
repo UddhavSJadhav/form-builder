@@ -12,6 +12,7 @@ import { connectCloudinary } from "./utils/cloudinary.js";
 
 //routes
 import formRouter from "./routes/formRoutes.js";
+import respondentRouter from "./routes/respondentRoutes.js";
 
 //configuration
 const PORT = process.env.PORT || 8000;
@@ -46,6 +47,7 @@ if (environment === "production") {
 }
 
 app.use("/api/v1/forms", formRouter);
+app.use("/api/v1/respondents", respondentRouter);
 
 //start-function
 export const startServer = () => {

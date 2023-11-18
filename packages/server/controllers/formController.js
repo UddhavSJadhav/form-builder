@@ -61,6 +61,39 @@ export const getFormById = async (req, res) => {
   }
 };
 
+export const getFormQuestionsById = async (req, res) => {
+  try {
+    const formId = req.params.formId;
+
+    const [formData, categorizeQues, clozeQues, comprehensionQues] =
+      await Promise.all([
+        formModel.findById(formId).select("-createdAt -updatedAt").lean(),
+        categorizeModel
+          .find({ form: formId })
+          .select("-form -itemsWithBelongsTo.belongsTo -createdAt -updatedAt")
+          .lean(),
+        clozeModel
+          .find({ form: formId })
+          .select("-form -sentence -createdAt -updatedAt")
+          .lean(),
+        comprehensionModel
+          .find({ form: formId })
+          .select("-form -mcqs.answer -createdAt -updatedAt")
+          .lean(),
+      ]);
+
+    res.status(200).json({
+      data: {
+        ...formData,
+        questions: [...categorizeQues, ...clozeQues, ...comprehensionQues],
+      },
+    });
+  } catch (error) {
+    console.error("error", error);
+    res.status(500).json({ message: "Something went wrong, Retry!" });
+  }
+};
+
 export const postForm = async (req, res) => {
   try {
     const formId = req.body.formId;

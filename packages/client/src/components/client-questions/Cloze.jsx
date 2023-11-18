@@ -3,7 +3,7 @@ import { useState } from "react";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 
 const Cloze = ({ index, data, answer, setAnswers }) => {
-  const sentenceArray = data?.sentence
+  const sentenceArray = data?.sentenceWithBlanks
     ?.replace(/<u>.*?<\/u>/g, "___________________")
     ?.split("___________________");
 

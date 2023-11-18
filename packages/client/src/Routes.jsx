@@ -10,10 +10,11 @@ import Forms from "./pages/Forms";
 import AddNewForm from "./pages/AddNewForm";
 
 //lazyloaded-pages
-const Responses = lazy(() => import("./pages/Responses"));
 const Preview = lazy(() => import("./pages/Preview.jsx"));
 const EditForm = lazy(() => import("./pages/EditForm.jsx"));
 const Form = lazy(() => import("./pages/Form.jsx"));
+const Responses = lazy(() => import("./pages/Responses"));
+const Response = lazy(() => import("./pages/Response.jsx"));
 
 const Router = () => {
   //   const { auth } = useAuth();
@@ -31,10 +32,14 @@ const Router = () => {
         <Route index element={<Forms />} />
         {/* <Route element={<PrivateRoute />}> */}
         <Route path="/forms" element={<Forms />} />
-        <Route path="/forms/responses/:formId" element={<Responses />} />
         <Route path="/forms/add-new-form" element={<AddNewForm />} />
         <Route path="/forms/edit-form/:formId" element={<EditForm />} />
         <Route path="/forms/preview/:formId" element={<Preview />} />
+        <Route path="/forms/responses/:formId" element={<Responses />} />
+        <Route
+          path="/forms/responses/:formId/:responseId"
+          element={<Response />}
+        />
         {/* </Route> */}
       </Route>
       <Route path="/form/:formId" element={<Form />} />

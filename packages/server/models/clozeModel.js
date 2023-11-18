@@ -6,6 +6,7 @@ const clozeSchema = new Schema(
     type: { type: String, default: "cloze" },
     points: { type: Number, required: true },
     sentence: { type: String, default: "" },
+    sentenceWithBlanks: { type: String, default: "" },
     imageUrl: { type: String, default: "" },
     options: [{ type: String }],
   },

@@ -110,6 +110,12 @@ const EditForm = () => {
             ?.replace("</p>", "")
             ?.trim();
 
+          filteredQuestion.sentenceWithBlanks = que.sentence
+            ?.replace("<p>", "")
+            ?.replace("</p>", "")
+            ?.replace(/<u>(.*?)<\/u>/g, "<u></u>")
+            ?.trim();
+
           filteredQuestion.options = que.options.filter((c) => c.trim());
         } else if (que.type === "comprehension") {
           queErrors.passage = !isValidBool(que.passage);

@@ -9,22 +9,22 @@ import { axiosOpen } from "../utils/axios";
 
 const Forms = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const pageNo = Number(searchParams.get("page_no") || 1);
+  const pageSize = Number(searchParams.get("page_size") || 10);
+  const totalData = Number(searchParams.get("total_data") || 0);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["forms"],
     queryFn: async () => {
-      const params = {
-        page_no: 1,
-        page_size: 10,
-      };
-
-      const { data } = await axiosOpen.get("/forms", { params });
+      const { data } = await axiosOpen.get("/forms", {
+        page_no: pageNo,
+        page_size: pageSize,
+      });
 
       setSearchParams(
-        {
-          page_no: params.page_no,
-          page_size: params.page_size,
-          total_data: data?.total_data,
+        (prev) => {
+          prev.set("total_data", data.total_data);
+          return prev;
         },
         { replace: true }
       );
@@ -80,7 +80,7 @@ const Forms = () => {
                 Created On
               </th>
               <th className="py-4 px-4 border border-slate-300 text-left">
-                Respondants
+                Respondents
               </th>
               <th className="py-4 px-4 border border-slate-300 text-left">
                 Actions
@@ -174,54 +174,39 @@ const Forms = () => {
       </div>
       <div className="mt-4 flex flex-wrap justify-between items-center">
         <div>
-          {`Showing ${
-            1 +
-            (Number(searchParams.get("page_no")) - 1) *
-              Number(searchParams.get("page_size"))
-          } to ${
-            Number(
-              searchParams.get("total_data") <
-                Number(searchParams.get("page_size"))
-            )
-              ? searchParams.get("total_data")
-              : Number(searchParams.get("page_no")) *
-                Number(searchParams.get("page_size"))
-          } of ${searchParams.get("total_data")?.toString()}`}
+          {`Showing ${totalData === 0 ? 0 : 1 + (pageNo - 1) * pageSize} to ${
+            totalData < pageSize ? totalData : pageNo * pageSize
+          } of ${totalData}`}
         </div>
 
         <div className="flex">
           <button
             className="py-1 px-2 bg-neutral-900 hover:bg-neutral-700 disabled:bg-neutral-700 disabled:cursor-not-allowed text-white rounded-s-md border-e border-solid border-neutral-400"
-            disabled={searchParams.get("page_no") === "1"}
+            disabled={pageNo === 1}
           >
             Previous
           </button>
-          {searchParams.get("page_no") !== "1" && (
+          {pageNo !== 1 && (
             <button className="py-1 px-2 bg-neutral-900 hover:bg-neutral-700 disabled:bg-neutral-700 text-white border-e border-solid border-neutral-400">
-              {Number(searchParams.get("page_no")) - 1}
+              {pageNo - 1}
             </button>
           )}
           <button
             title="current page"
             className="py-1 px-2 bg-neutral-900 text-white border-e border-solid border-neutral-400 cursor-none"
           >
-            {searchParams.get("page_no")}
+            {pageNo}
           </button>
-          {Math.ceil(
-            Number(searchParams.get("total_data")) /
-              Number(searchParams.get("page_size"))
-          ) !== Number(searchParams.get("page_no")) && (
+          {totalData > 1 && Math.ceil(totalData / pageSize) !== pageNo && (
             <button className="py-1 px-2 bg-neutral-900 hover:bg-neutral-700 disabled:bg-neutral-700 text-white border-e border-solid border-neutral-400">
-              {Number(searchParams.get("page_no")) + 1}
+              {pageNo + 1}
             </button>
           )}
           <button
             className="py-1 px-2 bg-neutral-900 hover:bg-neutral-700 disabled:bg-neutral-700 disabled:cursor-not-allowed text-white rounded-e-md"
             disabled={
-              Math.ceil(
-                Number(searchParams.get("total_data")) /
-                  Number(searchParams.get("page_size"))
-              ) === Number(searchParams.get("page_no"))
+              Number(totalData) < 1 ||
+              Math.ceil(totalData / pageSize) === pageNo
             }
           >
             Next

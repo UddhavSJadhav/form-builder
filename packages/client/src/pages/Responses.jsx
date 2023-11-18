@@ -1,31 +1,34 @@
 import { useEffect } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { toast } from "react-toastify";
-
-import DeleteForm from "../components/toast/DeleteForm.jsx";
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 
 import { axiosOpen } from "../utils/axios";
 
 const Responses = () => {
+  const { formId } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const pageNo = Number(searchParams.get("page_no") || 1);
+  const pageSize = Number(searchParams.get("page_size") || 10);
+  const totalData = Number(searchParams.get("total_data") || 0);
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ["forms"],
+    queryKey: ["respondents", formId],
     queryFn: async () => {
-      const params = {
-        page_no: 1,
-        page_size: 10,
-      };
-
-      const { data } = await axiosOpen.get("/forms", { params });
+      const { data } = await axiosOpen.get(`/respondents/${formId}`, {
+        page_no: pageNo,
+        page_size: pageSize,
+      });
 
       setSearchParams(
-        {
-          page_no: params.page_no,
-          page_size: params.page_size,
-          total_data: data?.total_data,
+        (prev) => {
+          prev.set("total_data", data.total_data);
+          return prev;
         },
         { replace: true }
       );
@@ -35,34 +38,14 @@ const Responses = () => {
     enabled: false,
   });
 
-  const { mutateAsync, isPending } = useMutation({
-    mutationFn: (formIdx) => axiosOpen.delete(`/forms/${formIdx}`),
-    onSuccess: () => refetch(),
-  });
-
   useEffect(() => {
     refetch();
   }, [refetch, searchParams]);
 
-  const deleteForm = (formIdx) =>
-    toast(
-      <DeleteForm
-        deleteFn={() =>
-          toast.promise(async () => await mutateAsync(formIdx), {
-            pending: "Deleting Form",
-            success: "Form Deleted",
-            error: "Form Deletion Failed",
-          })
-        }
-        text="Delete Form?"
-        isPending={isPending}
-      />
-    );
-
   return (
     <section className="p-10 pt-7 max-w-screen-xl mx-auto">
       <div className="flex justify-between items-center border-b border-solid border-b-neutral-300 p-1">
-        <h2 className="font-extrabold text-2xl">Responses</h2>
+        <h2 className="font-extrabold text-2xl">Respondents</h2>
         <button
           className="bg-neutral-800 hover:bg-neutral-700 text-white py-2 px-4 rounded-lg font-bold"
           onClick={() => navigate(-1, { replace: true })}
@@ -79,7 +62,10 @@ const Responses = () => {
                 Submitted On
               </th>
               <th className="py-4 px-4 border border-slate-300 text-left">
-                Form Respondant
+                Form Respondent
+              </th>
+              <th className="py-4 px-4 border border-slate-300 text-left">
+                Points
               </th>
               <th className="py-4 px-4 border border-slate-300 text-left">
                 Actions
@@ -97,14 +83,14 @@ const Responses = () => {
                 </td>
               </tr>
             ) : data?.length ? (
-              data?.map((form, index) => (
-                <tr key={form._id}>
+              data?.map((response, index) => (
+                <tr key={response._id}>
                   <td className="font-bold py-4 px-4 border border-slate-300 text-left">
                     {index + 1}
                   </td>
                   <td className="font-bold py-4 px-4 border border-slate-300 text-left">
-                    {form?.createdAt &&
-                      new Date(form?.createdAt).toLocaleString("en-IN", {
+                    {response?.createdAt &&
+                      new Date(response?.createdAt).toLocaleString("en-IN", {
                         month: "short",
                         day: "numeric",
                         year: "numeric",
@@ -114,27 +100,17 @@ const Responses = () => {
                       })}
                   </td>
                   <td className="font-bold py-4 px-4 border border-slate-300 text-left">
-                    {form?.formName}
+                    {response?.email}
                   </td>
                   <td className="font-bold py-4 px-4 border border-slate-300 text-left">
-                    <Link to={`/forms/preview/${form._id}`} className="me-1">
+                    {response?.points}
+                  </td>
+                  <td className="font-bold py-4 px-4 border border-slate-300 text-left">
+                    <Link to={`/forms/responses/${formId}/${response._id}`}>
                       <button className="px-2 py-1 rounded-md bg-neutral-800 hover:bg-neutral-700 text-white">
-                        Preview
+                        View
                       </button>
                     </Link>
-
-                    <Link to={`/forms/edit-form/${form._id}`} className="me-1">
-                      <button className="px-2 py-1 rounded-md bg-neutral-800 hover:bg-neutral-700 text-white">
-                        Edit
-                      </button>
-                    </Link>
-
-                    <button
-                      className="px-2 py-1 rounded-md bg-neutral-800 hover:bg-neutral-700 text-white"
-                      onClick={() => deleteForm(form._id)}
-                    >
-                      Delete
-                    </button>
                   </td>
                 </tr>
               ))
@@ -153,54 +129,39 @@ const Responses = () => {
       </div>
       <div className="mt-4 flex flex-wrap justify-between items-center">
         <div>
-          {`Showing ${
-            1 +
-            (Number(searchParams.get("page_no")) - 1) *
-              Number(searchParams.get("page_size"))
-          } to ${
-            Number(
-              searchParams.get("total_data") <
-                Number(searchParams.get("page_size"))
-            )
-              ? searchParams.get("total_data")
-              : Number(searchParams.get("page_no")) *
-                Number(searchParams.get("page_size"))
-          } of ${searchParams.get("total_data")?.toString()}`}
+          {`Showing ${totalData === 0 ? 0 : 1 + (pageNo - 1) * pageSize} to ${
+            totalData < pageSize ? totalData : pageNo * pageSize
+          } of ${totalData}`}
         </div>
 
         <div className="flex">
           <button
             className="py-1 px-2 bg-neutral-900 hover:bg-neutral-700 disabled:bg-neutral-700 disabled:cursor-not-allowed text-white rounded-s-md border-e border-solid border-neutral-400"
-            disabled={searchParams.get("page_no") === "1"}
+            disabled={pageNo === 1}
           >
             Previous
           </button>
-          {searchParams.get("page_no") !== "1" && (
+          {pageNo !== 1 && (
             <button className="py-1 px-2 bg-neutral-900 hover:bg-neutral-700 disabled:bg-neutral-700 text-white border-e border-solid border-neutral-400">
-              {Number(searchParams.get("page_no")) - 1}
+              {pageNo - 1}
             </button>
           )}
           <button
             title="current page"
             className="py-1 px-2 bg-neutral-900 text-white border-e border-solid border-neutral-400 cursor-none"
           >
-            {searchParams.get("page_no")}
+            {pageNo}
           </button>
-          {Math.ceil(
-            Number(searchParams.get("total_data")) /
-              Number(searchParams.get("page_size"))
-          ) !== Number(searchParams.get("page_no")) && (
+          {totalData > 1 && Math.ceil(totalData / pageSize) !== pageNo && (
             <button className="py-1 px-2 bg-neutral-900 hover:bg-neutral-700 disabled:bg-neutral-700 text-white border-e border-solid border-neutral-400">
-              {Number(searchParams.get("page_no")) + 1}
+              {pageNo + 1}
             </button>
           )}
           <button
             className="py-1 px-2 bg-neutral-900 hover:bg-neutral-700 disabled:bg-neutral-700 disabled:cursor-not-allowed text-white rounded-e-md"
             disabled={
-              Math.ceil(
-                Number(searchParams.get("total_data")) /
-                  Number(searchParams.get("page_size"))
-              ) === Number(searchParams.get("page_no"))
+              Number(totalData) < 1 ||
+              Math.ceil(totalData / pageSize) === pageNo
             }
           >
             Next

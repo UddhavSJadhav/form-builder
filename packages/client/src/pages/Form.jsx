@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 
 import Categorize from "../components/client-questions/Categorize.jsx";
@@ -8,6 +8,7 @@ import Cloze from "../components/client-questions/Cloze.jsx";
 import Comprehension from "../components/client-questions/Comprehension.jsx";
 
 import Input from "../components/custom/Input.jsx";
+import LoadingSvg from "../components/svgs/LoadingSvg.jsx";
 
 import { axiosOpen } from "../utils/axios.js";
 import { isValidBool, isValid } from "../utils/support.js";
@@ -28,7 +29,7 @@ const Form = () => {
   const { data } = useQuery({
     queryKey: ["form", formId],
     queryFn: async () => {
-      const { data } = await axiosOpen.get(`/forms/${formId}`);
+      const { data } = await axiosOpen.get(`/forms/client/${formId}`);
       setQuery(false);
 
       setAnswers([
@@ -54,6 +55,24 @@ const Form = () => {
       return data?.data;
     },
     enabled: query,
+  });
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: () => {
+      return axiosOpen.post(`/respondents/${formId}`, {
+        ...details,
+        answers,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Form submitted successfull!");
+    },
+    onError: (err) => {
+      console.log(err);
+      toast.error(
+        err?.response?.data?.message || "Something went wrong, Retry!"
+      );
+    },
   });
 
   const onDetailFormChange = (e) => {
@@ -135,8 +154,19 @@ const Form = () => {
           </div>
 
           <div className="mt-3 max-w-4xl mx-auto">
-            <button className="bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-800 text-white w-full px-2 py-2 font-extrabold rounded-xl shadow-md">
-              Submit
+            <button
+              onClick={mutate}
+              disabled={isPending}
+              className="bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-800 text-white w-full px-2 py-2 font-extrabold rounded-xl shadow-md"
+            >
+              {isPending ? (
+                <>
+                  <LoadingSvg className="animate-spin invert w-5 inline-block me-2 mb-[2px]" />
+                  Processing...
+                </>
+              ) : (
+                "Submit"
+              )}
             </button>
           </div>
         </div>

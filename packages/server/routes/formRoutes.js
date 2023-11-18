@@ -6,6 +6,7 @@ import { CloudinaryStorage } from "multer-storage-cloudinary";
 import {
   getAllForms,
   getFormById,
+  getFormQuestionsById,
   postForm,
   editFormById,
   deleteFormById,
@@ -48,5 +49,7 @@ router
     editFormById
   )
   .delete(deleteFormById);
+
+router.route("/client/:formId").get(getFormQuestionsById);
 
 export default router;
