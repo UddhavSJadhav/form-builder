@@ -21,8 +21,10 @@ const Responses = () => {
     queryKey: ["respondents", formId],
     queryFn: async () => {
       const { data } = await axiosOpen.get(`/respondents/${formId}`, {
-        page_no: pageNo,
-        page_size: pageSize,
+        params: {
+          page_no: pageNo,
+          page_size: pageSize,
+        },
       });
 
       setSearchParams(
@@ -41,6 +43,12 @@ const Responses = () => {
   useEffect(() => {
     refetch();
   }, [refetch, searchParams]);
+
+  const setPageNo = (newPageNo) =>
+    setSearchParams((prev) => {
+      prev.set("page_no", newPageNo);
+      return prev;
+    });
 
   return (
     <section className="p-10 pt-7 max-w-screen-xl mx-auto">
@@ -137,12 +145,16 @@ const Responses = () => {
         <div className="flex">
           <button
             className="py-1 px-2 bg-neutral-900 hover:bg-neutral-700 disabled:bg-neutral-700 disabled:cursor-not-allowed text-white rounded-s-md border-e border-solid border-neutral-400"
+            onClick={() => setPageNo(pageNo - 1)}
             disabled={pageNo === 1}
           >
             Previous
           </button>
           {pageNo !== 1 && (
-            <button className="py-1 px-2 bg-neutral-900 hover:bg-neutral-700 disabled:bg-neutral-700 text-white border-e border-solid border-neutral-400">
+            <button
+              className="py-1 px-2 bg-neutral-900 hover:bg-neutral-700 disabled:bg-neutral-700 text-white border-e border-solid border-neutral-400"
+              onClick={() => setPageNo(pageNo - 1)}
+            >
               {pageNo - 1}
             </button>
           )}
@@ -153,12 +165,16 @@ const Responses = () => {
             {pageNo}
           </button>
           {totalData > 1 && Math.ceil(totalData / pageSize) !== pageNo && (
-            <button className="py-1 px-2 bg-neutral-900 hover:bg-neutral-700 disabled:bg-neutral-700 text-white border-e border-solid border-neutral-400">
+            <button
+              className="py-1 px-2 bg-neutral-900 hover:bg-neutral-700 disabled:bg-neutral-700 text-white border-e border-solid border-neutral-400"
+              onClick={() => setPageNo(pageNo + 1)}
+            >
               {pageNo + 1}
             </button>
           )}
           <button
             className="py-1 px-2 bg-neutral-900 hover:bg-neutral-700 disabled:bg-neutral-700 disabled:cursor-not-allowed text-white rounded-e-md"
+            onClick={() => setPageNo(pageNo + 1)}
             disabled={
               Number(totalData) < 1 ||
               Math.ceil(totalData / pageSize) === pageNo

@@ -1,4 +1,5 @@
 import {
+  formModel,
   categorizeModel,
   clozeModel,
   comprehensionModel,
@@ -42,22 +43,29 @@ export const getResponseById = async (req, res) => {
       .findById(req.params.responseId)
       .lean();
     const formId = response?.form;
+
+    const [form, categorize, cloze, comprehension] = await Promise.all([
+      formModel.findById(formId).lean(),
+      categorizeModel
+        .find({ form: formId })
+        .select("-form -createdAt -updatedAt")
+        .lean(),
+      clozeModel
+        .find({ form: formId })
+        .select("-form -createdAt -updatedAt")
+        .lean(),
+      comprehensionModel
+        .find({ form: formId })
+        .select("-form -createdAt -updatedAt")
+        .lean(),
+    ]);
     const questions = [
-      ...(await categorizeModel
-        .find({ form: formId })
-        .select("-form -createdAt -updatedAt")
-        .lean()),
-      ...(await clozeModel
-        .find({ form: formId })
-        .select("-form -createdAt -updatedAt")
-        .lean()),
-      ...(await comprehensionModel
-        .find({ form: formId })
-        .select("-form -createdAt -updatedAt")
-        .lean()),
+      ...(categorize || []),
+      ...(cloze || []),
+      ...(comprehension || []),
     ];
 
-    res.status(200).json({ data: response, questions: questions });
+    res.status(200).json({ data: response, questions: questions, form });
   } catch (error) {
     console.error("error", error);
     res.status(500).json({ message: "Something went wrong, Retry!" });

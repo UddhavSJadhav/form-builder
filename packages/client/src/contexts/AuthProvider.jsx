@@ -1,92 +1,16 @@
-import { createContext, useState, useEffect } from "react";
-import { Outlet } from "react-router-dom";
-
-import { axiosOpen } from "../utils/axios.js";
+/* eslint-disable react/prop-types */
+import { createContext, useState } from "react";
 
 const AuthContext = createContext({});
 
 export default AuthContext;
 
-export const AuthProvider = () => {
-  const [auth, setAuth] = useState(
-    localStorage.getItem("auth")
-      ? { ...JSON.parse(localStorage.getItem("auth")) }
-      : {}
-  );
-
-  useEffect(() => {
-    const refreshToken = async () => {
-      try {
-        if (!auth?.refreshToken) return;
-        const { data } = await axiosOpen.post("/user/token/refresh", {
-          refresh: auth.refreshToken,
-        });
-        setAuth((prev) => ({
-          ...prev,
-          accessToken: data?.access,
-          refreshToken: data?.refresh,
-        }));
-        localStorage.setItem(
-          "auth",
-          JSON.stringify({
-            ...auth,
-            accessToken: data?.access,
-            refreshToken: data?.refresh,
-          })
-        );
-      } catch (error) {
-        console.error("Error refreshing token:", error);
-        setAuth({});
-        localStorage.removeItem("auth");
-      }
-    };
-    refreshToken();
-  }, []);
-
-  useEffect(() => {
-    const timeInMiliSeconds = 1000 * 60 * 58;
-    let tokenRefreshTimeout;
-
-    const refreshToken = async () => {
-      try {
-        if (!auth?.refreshToken) return;
-        const { data } = await axiosOpen.post("/user/token/refresh", {
-          refresh: auth.refreshToken,
-        });
-        setAuth((prev) => ({
-          ...prev,
-          accessToken: data?.access,
-          refreshToken: data?.refresh,
-        }));
-        localStorage.setItem(
-          "auth",
-          JSON.stringify({
-            ...auth,
-            accessToken: data?.access,
-            refreshToken: data?.refresh,
-          })
-        );
-        scheduleTokenRefresh();
-      } catch (error) {
-        console.error("Error refreshing token:", error);
-        setAuth({});
-        localStorage.removeItem("auth");
-      }
-    };
-
-    const scheduleTokenRefresh = () => {
-      clearTimeout(tokenRefreshTimeout);
-      tokenRefreshTimeout = setTimeout(refreshToken, timeInMiliSeconds);
-    };
-
-    scheduleTokenRefresh();
-
-    return () => clearTimeout(tokenRefreshTimeout);
-  }, [auth?.refreshToken]);
+export const AuthProvider = ({ children }) => {
+  const [auth, setAuth] = useState();
 
   return (
     <AuthContext.Provider value={{ auth, setAuth }}>
-      <Outlet />
+      {children}
     </AuthContext.Provider>
   );
 };
