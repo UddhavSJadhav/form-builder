@@ -13,7 +13,9 @@ const Categorize = ({ index, data, answer }) => {
       <div className="flex justify-between">
         <div className="font-semibold">Question {index + 1}</div>
         <div className="font-medium">Categorize</div>
-        <div className="font-medium">Points: {data?.points}</div>
+        <div className="font-medium">
+          Scored: {data?.scored}/{data?.points}
+        </div>
       </div>
 
       {data?.imageUrl && (

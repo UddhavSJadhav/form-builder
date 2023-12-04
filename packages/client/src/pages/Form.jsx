@@ -26,7 +26,7 @@ const Form = () => {
   const [answers, setAnswers] = useState([]);
 
   const [query, setQuery] = useState(true);
-  const { data } = useQuery({
+  const { data, refetch } = useQuery({
     queryKey: ["form", formId],
     queryFn: async () => {
       const { data } = await axiosOpen.get(`/forms/client/${formId}`);
@@ -57,6 +57,23 @@ const Form = () => {
     enabled: query,
   });
 
+  const { mutate: checkValidResponse, isPending: checkingValidResponse } =
+    useMutation({
+      mutationFn: () => {
+        return axiosOpen.post(`/respondents/${formId}/check-valid-response`, {
+          email: details.email,
+        });
+      },
+      onSuccess: () => {
+        setDetailsForm(false);
+      },
+      onError: (err) => {
+        console.log(err);
+        const message = err?.response?.data?.message;
+        toast.error(message || "Something went wrong, Retry!");
+      },
+    });
+
   const { mutate, isPending } = useMutation({
     mutationFn: () => {
       return axiosOpen.post(`/respondents/${formId}`, {
@@ -66,6 +83,8 @@ const Form = () => {
     },
     onSuccess: () => {
       toast.success("Form submitted successfull!");
+      setDetailsForm(true);
+      refetch();
     },
     onError: (err) => {
       console.log(err);
@@ -79,25 +98,28 @@ const Form = () => {
     setDetails((prev) => ({ ...prev, [e.target.id]: e.target.value }));
   };
 
-  const handleDetailFormSubmit = () =>
-    setErrors((prev) => {
-      prev.email = !isValidBool(details.email);
-      prev.name = !isValidBool(details.name);
+  const handleDetailFormSubmit = () => {
+    let errObj = {
+      email: !isValidBool(details.email),
+      name: !isValidBool(details.name),
+    };
 
-      if (Object.values(prev).reduce((prev, curr) => prev || curr, false)) {
-        toast.error("Both fields are required!");
-        return { ...prev };
-      }
+    if (Object.values(errObj).reduce((prev, curr) => prev || curr, false)) {
+      toast.error("Both fields are required!");
+    }
 
-      if (isValid("Email", details.email, "email") !== "") {
-        toast.error("Email is invalid!");
-        prev.email = true;
-        return { ...prev };
-      }
+    if (isValid("Email", details.email, "email") !== "") {
+      toast.error("Email is invalid!");
+      errObj.email = true;
+    }
 
-      setDetailsForm(false);
-      return prev;
-    });
+    setErrors((prev) => ({ ...prev, ...errObj }));
+
+    if (Object.values(errObj).reduce((prev, curr) => prev || curr, false))
+      return;
+
+    checkValidResponse();
+  };
 
   return (
     <div className="bg-neutral-100 min-h-screen">
@@ -208,8 +230,9 @@ const Form = () => {
             <button
               className="bg-neutral-900 hover:bg-neutral-700 px-4 py-2 text-white font-bold rounded-lg"
               onClick={handleDetailFormSubmit}
+              disabled={checkingValidResponse}
             >
-              Continue
+              {checkingValidResponse ? "Loading..." : "Continue"}
             </button>
           </div>
         </div>

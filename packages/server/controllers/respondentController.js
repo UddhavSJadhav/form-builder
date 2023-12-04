@@ -75,8 +75,9 @@ export const getResponseById = async (req, res) => {
 export const postResponse = async (req, res) => {
   try {
     const { formId } = req.params;
-    const { answers } = req.body;
+    let { answers, email } = req.body;
     req.body.form = formId;
+    req.body.email = email ? email?.toLowerCase()?.trim() : "";
 
     let answersObj = answers?.reduce(
       (prev, curr) => ({ ...prev, [curr._id]: curr.answer }),
@@ -98,7 +99,7 @@ export const postResponse = async (req, res) => {
         .lean()),
     ];
 
-    req.body.points = questions.reduce((prev, currQuestion) => {
+    req.body.points = questions.reduce((prev, currQuestion, ansIndex) => {
       let points = 0;
       const answer = answersObj[currQuestion._id.toString()];
 
@@ -134,6 +135,7 @@ export const postResponse = async (req, res) => {
         if (areCorrect) points = currQuestion.points;
       }
 
+      answers[ansIndex].scored = Number(points);
       return prev + Number(points);
     }, 0);
 
@@ -141,6 +143,26 @@ export const postResponse = async (req, res) => {
     res.status(201).json({ message: "Response creation succesfull!" });
   } catch (error) {
     console.error("error", error);
+    res.status(500).json({ message: "Something went wrong, Retry!" });
+  }
+};
+
+export const checkEmailAlreadyHasResponse = async (req, res) => {
+  try {
+    const { formId } = req.params;
+    const { email } = req.body;
+
+    const alreadyHasResponse = await respondentModel.findOne({
+      email: email?.toLowerCase()?.trim(),
+      form: formId,
+    });
+
+    if (alreadyHasResponse)
+      return res.status(400).json({ message: "Email already has a response." });
+
+    res.sendStatus(200);
+  } catch (error) {
+    console.log(error);
     res.status(500).json({ message: "Something went wrong, Retry!" });
   }
 };

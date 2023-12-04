@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useState } from "react";
 import {
   Link,
   useNavigate,
@@ -15,10 +15,11 @@ const Responses = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const pageNo = Number(searchParams.get("page_no") || 1);
   const pageSize = Number(searchParams.get("page_size") || 10);
-  const totalData = Number(searchParams.get("total_data") || 0);
+  const [totalData, setTotalData] = useState(0);
 
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ["respondents", formId],
+  const [queryCall, setQueryCall] = useState(false);
+  const { data, isLoading } = useQuery({
+    queryKey: ["respondents", formId, { page_no: pageNo, page_size: pageSize }],
     queryFn: async () => {
       const { data } = await axiosOpen.get(`/respondents/${formId}`, {
         params: {
@@ -27,28 +28,23 @@ const Responses = () => {
         },
       });
 
-      setSearchParams(
-        (prev) => {
-          prev.set("total_data", data.total_data);
-          return prev;
-        },
-        { replace: true }
-      );
+      setTotalData(data.total_data);
+
+      setQueryCall(true);
 
       return data.data;
     },
-    enabled: false,
+    enabled: !queryCall,
   });
 
-  useEffect(() => {
-    refetch();
-  }, [refetch, searchParams]);
-
   const setPageNo = (newPageNo) =>
-    setSearchParams((prev) => {
-      prev.set("page_no", newPageNo);
-      return prev;
-    });
+    setSearchParams(
+      (prev) => {
+        prev.set("page_no", newPageNo);
+        return prev;
+      },
+      { replace: true }
+    );
 
   return (
     <section className="p-10 pt-7 max-w-screen-xl mx-auto">

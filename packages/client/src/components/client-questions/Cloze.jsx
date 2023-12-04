@@ -63,7 +63,7 @@ const Cloze = ({ index, data, answer, setAnswers }) => {
                             {...provided.droppableProps}
                             className="inline-block"
                           >
-                            {answer.answer[i] ? (
+                            {answer?.answer && answer?.answer[i] ? (
                               <span className="bg-neutral-300 px-4 py-2 rounded-md">
                                 {answer.answer[i]}
                               </span>

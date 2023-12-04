@@ -27,7 +27,7 @@ const Input = ({
         className={`w-full px-2 ${
           size === "lg" ? "text-lg py-2" : "py-1"
         } outline-none border-2 border-solid ${
-          isInvalid ? "border-red-400" : "border-neutral-300"
+          isInvalid ? "border-red-400 animate-shake" : "border-neutral-300"
         }  rounded-md`}
         value={value}
         onChange={onChange}

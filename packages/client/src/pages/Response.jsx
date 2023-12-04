@@ -26,10 +26,20 @@ const Response = () => {
         (answer) => (answersObj[answer._id] = answer.answer)
       );
 
+      const questions = data?.questions?.map((que, i) => ({
+        ...que,
+        scored:
+          data?.data?.answers &&
+          data?.data?.answers[i] &&
+          data?.data?.answers[i]?.scored
+            ? data?.data?.answers[i]?.scored
+            : 0,
+      }));
+
       return {
         response: data?.data,
         form: data?.form,
-        questions: data?.questions,
+        questions,
         answerObj: answersObj,
       };
     },

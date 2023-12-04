@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
@@ -11,10 +11,11 @@ const Forms = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const pageNo = Number(searchParams.get("page_no") || 1);
   const pageSize = Number(searchParams.get("page_size") || 10);
-  const totalData = Number(searchParams.get("total_data") || 0);
+  const [totalData, setTotalData] = useState(0);
 
+  const [queryCall, setQueryCall] = useState(false);
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ["forms"],
+    queryKey: ["forms", { page_no: pageNo, page_size: pageSize }],
     queryFn: async () => {
       const { data } = await axiosOpen.get("/forms", {
         params: {
@@ -23,27 +24,19 @@ const Forms = () => {
         },
       });
 
-      setSearchParams(
-        (prev) => {
-          prev.set("total_data", data.total_data);
-          return prev;
-        },
-        { replace: true }
-      );
+      setTotalData(data?.total_data || 0);
+
+      setQueryCall(true);
 
       return data.data;
     },
-    enabled: false,
+    enabled: !queryCall,
   });
 
   const { mutateAsync, isPending } = useMutation({
     mutationFn: (formIdx) => axiosOpen.delete(`/forms/${formIdx}`),
     onSuccess: () => refetch(),
   });
-
-  useEffect(() => {
-    refetch();
-  }, [refetch, pageNo]);
 
   const deleteForm = (formIdx) =>
     toast(
@@ -61,10 +54,13 @@ const Forms = () => {
     );
 
   const setPageNo = (newPageNo) =>
-    setSearchParams((prev) => {
-      prev.set("page_no", newPageNo);
-      return prev;
-    });
+    setSearchParams(
+      (prev) => {
+        prev.set("page_no", newPageNo);
+        return prev;
+      },
+      { replace: true }
+    );
 
   return (
     <section className="p-10 pt-7 max-w-screen-xl mx-auto">
@@ -132,9 +128,9 @@ const Forms = () => {
                       </button>
                     </Link>
                   </td>
-                  <td className="font-bold py-4 px-4 border border-slate-300 text-left">
+                  <td className="font-bold py-4 px-4 border border-slate-300 text-left flex flex-wrap gap-2">
                     <button
-                      className="px-2 py-1 rounded-md bg-neutral-800 hover:bg-neutral-700 text-white me-1"
+                      className="px-2 py-1 rounded-md bg-neutral-800 hover:bg-neutral-700 text-white"
                       title="copy url"
                       onClick={() => {
                         navigator.clipboard.writeText(
@@ -146,13 +142,13 @@ const Forms = () => {
                       URL
                     </button>
 
-                    <Link to={`/forms/preview/${form._id}`} className="me-1">
+                    <Link to={`/forms/preview/${form._id}`}>
                       <button className="px-2 py-1 rounded-md bg-neutral-800 hover:bg-neutral-700 text-white">
                         Preview
                       </button>
                     </Link>
 
-                    <Link to={`/forms/edit-form/${form._id}`} className="me-1">
+                    <Link to={`/forms/edit-form/${form._id}`}>
                       <button className="px-2 py-1 rounded-md bg-neutral-800 hover:bg-neutral-700 text-white">
                         Edit
                       </button>
